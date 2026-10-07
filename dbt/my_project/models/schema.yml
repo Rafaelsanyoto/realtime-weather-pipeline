@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_weather_data
+    description: >
+      Cleaned and deduplicated
+      weather observations.
+    columns:
+      - name: id
+        data_tests:
+          - not_null
+          - unique
+      - name: city
+        data_tests:
+          - not_null
+      - name: temperature
+        data_tests:
+          - not_null
+      - name: weather_time_local
+        data_tests:
+          - not_null
+  - name: daily_average
+    description: >
+      Daily aggregated weather statistics
+      for each city.
+    columns:
+      - name: city
+        data_tests:
+          - not_null
+      - name: date
+        data_tests:
+          - not_null
+      - name: observation_count
+        data_tests:
+          - not_null
+
+  - name: weather_report
+    description: >
+      Most recent weather observation
+      for each city.
+    columns:
+      - name: city
+        data_tests:
+          - not_null
+          - unique
+      - name: temperature
+        data_tests:
+          - not_null
+      - name: weather_time_local
+        data_tests:
+          - not_null

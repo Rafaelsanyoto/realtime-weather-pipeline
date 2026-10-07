@@ -1,0 +1,7 @@
+.env
+.venv/
+__pycache__/
+postgres/data/
+dbt/my_project/target/
+dbt/my_project/logs/
+dbt/my_project/dbt_packages/
