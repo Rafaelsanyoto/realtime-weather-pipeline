@@ -77,10 +77,8 @@ def geocode_city(city):
 
         except requests.exceptions.RequestException as e:
             print(f"Geocoding attempt {attempt}/3 failed for {city}: {e}")
-
             if attempt == 3:
                 raise
-
             time.sleep(3)
 
 def fetch_historical_weather(location, start_date, end_date):
@@ -105,21 +103,15 @@ def fetch_historical_weather(location, start_date, end_date):
 
         except requests.exceptions.RequestException as e:
             print(f"Historical API attempt {attempt}/3 failed: {e}")
-
             if attempt == 3:
                 raise
-
             time.sleep(3)
 
 def get_utc_offset(timestamp, timezone_name):
     dt = datetime.fromisoformat(timestamp)
     local_dt = dt.replace(tzinfo=ZoneInfo(timezone_name))
     offset = local_dt.utcoffset()
-
-    if offset is None:
-        return "0"
-
-    return str(offset.total_seconds() / 3600)
+    return "0" if offset is None else str(offset.total_seconds() / 3600)
 
 def insert_historical_data(conn, requested_city, location, data):
     hourly = data["hourly"]
@@ -135,37 +127,15 @@ def insert_historical_data(conn, requested_city, location, data):
         cursor.execute(
             """
             INSERT INTO dev.raw_weather_data (
-                city,
-                country,
-                temperature,
-                feelslike,
-                humidity,
-                weather_descriptions,
-                wind_speed,
-                pressure,
-                precip,
-                time,
-                inserted_at,
-                utc_offset
+                city, country, temperature, feelslike, humidity,
+                weather_descriptions, wind_speed, pressure, precip,
+                time, inserted_at, utc_offset
             )
-            SELECT
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                NOW(),
-                %s
+            SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM dev.raw_weather_data
-                WHERE city = %s
-                  AND time = %s
+                WHERE city = %s AND time = %s
             )
             """,
             (
@@ -196,7 +166,6 @@ def insert_historical_data(conn, requested_city, location, data):
 
 def main():
     days = int(sys.argv[1]) if len(sys.argv) > 1 else 30
-
     jakarta_today = datetime.now(ZoneInfo("Asia/Jakarta")).date()
     end_date = jakarta_today - timedelta(days=1)
     start_date = end_date - timedelta(days=days - 1)
@@ -212,11 +181,7 @@ def main():
         for city in cities:
             print(f"\n===== {city} =====")
             location = geocode_city(city)
-            historical_data = fetch_historical_weather(
-                location,
-                start_date.isoformat(),
-                end_date.isoformat()
-            )
+            historical_data = fetch_historical_weather(location, start_date.isoformat(), end_date.isoformat())
             insert_historical_data(conn, city, location, historical_data)
 
         print("\nHistorical backfill completed!")

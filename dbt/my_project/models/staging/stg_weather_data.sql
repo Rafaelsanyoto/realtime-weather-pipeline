@@ -1,28 +1,15 @@
-{{ config(
-    materialized='table'
-) }}
-
+{{ config(materialized='table') }}
 
 with source as (
-
     select *
-    from {{ source(
-        'dev',
-        'raw_weather_data'
-    ) }}
+    from {{ source('dev', 'raw_weather_data') }}
 ),
 
 de_dup as (
-
-    select
-        *,
+    select *,
         row_number() over (
-            partition by
-                city,
-                time
-            order by
-                inserted_at desc,
-                id desc
+            partition by city, time
+            order by inserted_at desc, id desc
         ) as rn
     from source
 )
@@ -40,11 +27,7 @@ select
     precip,
     time as weather_time_local,
     inserted_at,
-    inserted_at
-        + (
-            utc_offset || ' hours'
-        )::interval
-        as inserted_at_local,
+    inserted_at + (utc_offset || ' hours')::interval as inserted_at_local,
     utc_offset
 from de_dup
 where rn = 1

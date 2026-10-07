@@ -1,20 +1,12 @@
-{{ config(
-    materialized='table'
-) }}
+{{ config(materialized='table') }}
 
 with ranked_weather as (
-
-    select
-        *,
+    select *,
         row_number() over (
             partition by city
-            order by
-                weather_time_local desc,
-                inserted_at_local desc
+            order by weather_time_local desc, inserted_at_local desc
         ) as rn
-    from {{ ref(
-        'stg_weather_data'
-    ) }}
+    from {{ ref('stg_weather_data') }}
 )
 
 select
